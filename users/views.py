@@ -30,11 +30,9 @@ class LoginView(APIView):
 
         user = serializer.validated_data['user']
         refresh = RefreshToken.for_user(user)
+        refresh['birthdate'] = user.birthdate.isoformat() if user.birthdate else None
 
         return Response(
-            {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            },
+            {'refresh': str(refresh), 'access': str(refresh.access_token)},
             status=status.HTTP_200_OK,
-        )
+            )

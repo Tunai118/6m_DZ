@@ -12,7 +12,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'phone_number')
+        fields = ('email', 'password', 'phone_number', 'birthdate')
 
     def validate_phone_number(self, value):
         if value is None or value == '':
@@ -27,10 +27,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        return User.objects.create_user(
-            password=password,
-            **validated_data
-        )
+        return User.objects.create_user(password=password, **validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
