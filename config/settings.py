@@ -1,5 +1,8 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-change-this-in-production'
@@ -81,3 +84,7 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Registration and login with email and phone validation',
     'VERSION': '1.0.0',
 }
+
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
