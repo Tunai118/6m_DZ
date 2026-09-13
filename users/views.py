@@ -1,4 +1,5 @@
 import requests
+import random
 from .models import User
 from django.conf import settings
 from django.shortcuts import redirect
@@ -8,11 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
+from django.shortcuts import get_object_or_404
 
-from .serializers import (
-    RegisterSerializer,
-    LoginSerializer,
-)
+from .serializers import RegisterSerializer, LoginSerializer, ConfirmSerializer
 
 
 
@@ -139,3 +138,41 @@ class GoogleCallbackView(APIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         })
+
+class ConfirmView(APIView):
+    serializer_class = ConfirmSerializer
+
+    @extend_schema(request=ConfirmSerializer, responses={200: dict})
+    def post(self, request):
+        serializer = ConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+
+        user = get_object_or_404(User, email=email)
+
+        redis_key = f'confirmation_code:{user.id}'
+        saved_code = redis_client.get(redis_key)
+
+        if saved_code is None:
+            return Response(
+                {'error': 'Confirmation code expired or does not exist.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if saved_code != code:
+            return Response(
+                {'error': 'Invalid confirmation code.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+
+        redis_client.delete(redis_key)
+
+        return Response(
+            {'message': 'User successfully confirmed.'},
+            status=status.HTTP_200_OK,
+        )

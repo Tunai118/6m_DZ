@@ -1,7 +1,7 @@
 import re
 
-from django.contrib.auth import authenticate
 from rest_framework import serializers
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
@@ -27,7 +27,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        return User.objects.create_user(password=password, **validated_data)
+
+        return User.objects.create_user(
+            password=password,
+            is_active=False,
+            **validated_data
+        )
 
 
 class LoginSerializer(serializers.Serializer):
@@ -42,14 +47,10 @@ class LoginSerializer(serializers.Serializer):
         )
 
         if user is None:
-            raise serializers.ValidationError(
-                'Invalid email or password.'
-            )
+            raise serializers.ValidationError('Invalid email or password.')
 
         if not user.is_active:
-            raise serializers.ValidationError(
-                'User account is inactive.'
-            )
+            raise serializers.ValidationError('User account is inactive.')
 
         attrs['user'] = user
         return attrs
@@ -57,3 +58,8 @@ class LoginSerializer(serializers.Serializer):
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
+
+
+class ConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
