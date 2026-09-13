@@ -1,6 +1,9 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import os
+
+from celery.schedules import crontab
 
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,3 +93,23 @@ GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
 
 REDIS_URL = 'redis://127.0.0.1:6379/0'
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+CELERY_BEAT_SCHEDULE = {
+    'delete-old-celery-logs-every-day': {
+        'task': 'products.tasks.delete_old_logs',
+        'schedule': crontab(hour=3, minute=0),
+    },
+}
+
+CELERY_TIMEZONE = 'Asia/Bishkek'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
